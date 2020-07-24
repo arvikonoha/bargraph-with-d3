@@ -1,0 +1,85 @@
+async function fetchData() {
+  let data = await fetch(
+  "https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/GDP-data.json");
+
+  let json = await data.json();
+  return json;
+}
+
+document.addEventListener("DOMContentLoaded", async event => {
+  let { data } = await fetchData();
+  console.log(data);
+  let h = 414;
+  let w = 896;
+  let padding = 64;
+  console.log(d3);
+
+  let yScale = d3.
+  scaleLinear().
+  domain([0, d3.max(data, d => d[1])]).
+  range([h - padding, padding]);
+
+  let xScale = d3.
+  scaleTime().
+  domain([
+  d3.min(data, d => new Date(d[0])),
+  d3.max(data, d => new Date(d[0]))]).
+
+  range([padding, w - padding]);
+
+  let xAxis = d3.axisBottom(xScale).ticks(14).tickFormat(d3.timeFormat("%Y"));
+  let yAxis = d3.axisLeft(yScale);
+
+  let svg = d3.select("#svgc").append("svg").attr("height", h).attr("width", w);
+
+  let div = d3.select("body").append("div").attr("id", "tooltip");
+
+  svg.
+  selectAll("rect").
+  data(data).
+  enter().
+  append("rect").
+  attr("data-date", d => d[0]).
+  attr("data-gdp", d => d[1]).
+  attr("x", d => xScale(new Date(d[0]))).
+  attr("y", d => yScale(d[1])).
+  attr("height", d => h - yScale(d[1]) - padding).
+  attr("width", w / data.length).
+  attr("class", "bar").
+  on("mouseover", d => {
+    div.transition().duration(200).style("opacity", 0.9);
+
+    div.
+    html(
+    new Date(d[0]).getFullYear() +
+    "  Q" +
+    Math.ceil((new Date(d[0]).getMonth() + 1) / 4) +
+    "<br>$" +
+    d[1] + "B").
+
+    attr("data-date", d[0]).
+    style("left", d3.event.pageX + "px");
+  }).
+  on("mouseout", d => {
+    div.transition().duration(200).style("opacity", 0);
+  });
+
+  svg.
+  append("g").
+  attr("transform", `translate(0,${h - padding})`).
+  attr("id", "x-axis").
+  attr("class", "scale").
+  call(xAxis);
+
+  svg.
+  append("g").
+  attr("id", "y-axis").
+  attr("transform", `translate(${padding},0)`).
+  attr("class", "scale").
+  call(yAxis).
+  append("text").
+  text("Gross domestic product").
+  style("fill", "#fff").
+  attr("transform", `translate(24,${h / 4}) rotate(-90) `).
+  attr("font-size", ".8rem");
+});
